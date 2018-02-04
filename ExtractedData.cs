@@ -12,5 +12,6 @@ namespace HWSPriceBot
         public DateTime Date { get; set; }
         public string Item { get; set; }
         public string Author { get; set; }
+        public Uri Url { get; set; }
     }
 }

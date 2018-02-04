@@ -29,7 +29,8 @@ namespace HWSPriceBot
                         Price = de.GetPrice(post),
                         Item = de.ParseTitle(post.Title),
                         Date = post.Created,
-                        Author = post.Author.Name
+                        Author = post.Author.Name,
+                        Url = post.Url
                     };
                     Console.Write("Post by " + post.Author.Name + " has been processed\n");
                     bool itemInDatabase = de.ValueExistsInDatabase(extractedData);

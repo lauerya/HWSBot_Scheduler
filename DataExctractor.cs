@@ -70,7 +70,8 @@ namespace HWSPriceBot
 			myCommand.Parameters.AddWithValue("@Items", data.Item);
 			myCommand.Parameters.AddWithValue("@Date", data.Date.ToString());
             myCommand.Parameters.AddWithValue("@Price", String.Join(", ", data.Price.ToArray()));
-            ;
+            myCommand.Parameters.AddWithValue("@Url", data.Url.ToString());
+            
             myConnection.Open();
 
             myCommand.ExecuteNonQuery();
