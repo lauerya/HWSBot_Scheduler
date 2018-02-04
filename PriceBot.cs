@@ -31,9 +31,11 @@ namespace HWSPriceBot
                         Date = post.Created,
                         Author = post.Author.Name
                     };
+                    Console.Write("Post by " + post.Author.Name + " has been processed\n");
                     bool itemInDatabase = de.ValueExistsInDatabase(extractedData);
                     if (!itemInDatabase)
                     {
+                        Console.Write("Post by " + extractedData.Author + " is being written to database\n");
                         de.AddToDatabase(extractedData);
                     }
                 }

@@ -8,10 +8,13 @@ namespace HWSPriceBot
     public class DataExctractor : IDataExtractor
     {
         ExtractedData extractedData;
+        string connectionString = "Data Source=DESKTOP-G3VPCBF;Initial Catalog=HardwareSwap;Integrated Security=True";
+
 
         public List<string> GetPrice(Post post)
         {
             extractedData = new ExtractedData();
+            extractedData.Price = new List<string>();
 
             extractedData.Date = post.Created;
 
@@ -27,10 +30,15 @@ namespace HWSPriceBot
                 {
 
                     i++;
-                    while (Char.IsDigit(postText[i]))
+                    while (Char.IsDigit(postText[i]) && i < postText.Length)
                     {
                         totalPrice += postText[i];
+                        if (i + 1 == postText.Length)
+                        {
+                            break;
+                        }
                         i++;
+                      
                     }
                     extractedData.Price.Add(totalPrice);
                     j++;
@@ -46,40 +54,54 @@ namespace HWSPriceBot
         {
             if(title.Contains("[H]") || title.Contains("[h]"))
             {
-				return title.Split(']')[1].Split('[')[0].Replace(" ", "");
+				return title.Split(']')[2].Split('[')[0];
             }
             return "0";
         }
 
 		public void AddToDatabase(ExtractedData data)
 		{
-            string connectionString = "Data Source=DESKTOP-G3VPCBF;Initial Catalog=HWSBot;Integrated Security=True";
+
             SqlConnection myConnection = new SqlConnection(connectionString);
 
-            myConnection.Open();
-
-            SqlCommand myCommand = new SqlCommand("INSERT INTO HWSBotTable", myConnection);
+            SqlCommand myCommand = new SqlCommand("dbo.MergePost", myConnection);
+            myCommand.CommandType = System.Data.CommandType.StoredProcedure;
 			myCommand.Parameters.AddWithValue("@Name", data.Author);
 			myCommand.Parameters.AddWithValue("@Items", data.Item);
-			myCommand.Parameters.AddWithValue("@Date", data.Date);
-            myCommand.Parameters.AddWithValue("@Price", data.Price);
+			myCommand.Parameters.AddWithValue("@Date", data.Date.ToString());
+            myCommand.Parameters.AddWithValue("@Price", String.Join(", ", data.Price.ToArray()));
+            ;
+            myConnection.Open();
 
             myCommand.ExecuteNonQuery();
         }
 
         public bool ValueExistsInDatabase(ExtractedData data)
 		{
-			SqlCommand find_item = new SqlCommand("SELECT TOP 1 FROM products WHERE products.id = ?");
-			if (find_item == null)
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
+            SqlConnection myConnection = new SqlConnection(connectionString);
+            bool valueExists = false;
 
-		}
+            SqlCommand myCommand = new SqlCommand("dbo.CheckPost", myConnection);
+            myCommand.CommandType = System.Data.CommandType.StoredProcedure;
+            myCommand.Parameters.AddWithValue("@Name", data.Author);
+            myCommand.Parameters.AddWithValue("@Items", data.Item);
+            myCommand.Parameters.AddWithValue("@Date", data.Date.ToString());
+            myCommand.Parameters.AddWithValue("@Price", String.Join(", ", data.Price.ToArray()));
+            ;
+            myConnection.Open();
+
+            var reader = myCommand.ExecuteReader();
+            while (reader.Read())
+            {
+                if (reader.HasRows)
+                {
+                    valueExists = true;
+                }
+            }
+            reader.Close();
+            return valueExists;
+
+        }
 
 		public void WriteToFile(Post post, string items, List<string> price)
 		{
