@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Author.cs" />
     <Compile Include="DataExctractor.cs" />
     <Compile Include="IDataExtractor.cs" />
     <Compile Include="ExtractedData.cs" />

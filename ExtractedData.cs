@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HWSPriceBot
 {
@@ -13,5 +10,11 @@ namespace HWSPriceBot
         public string Item { get; set; }
         public string Author { get; set; }
         public Uri Url { get; set; }
+        public string Text { get; set; }
+        public string TextHtml { get; set; }
+        public string Flair { get; set; }
+        public string Subreddit { get; set; }
+        public string Title { get; set; }
+        public Author AuthorDto { get; set; }
     }
 }

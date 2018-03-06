@@ -40,7 +40,7 @@ namespace HWSPriceBot
                         i++;
                       
                     }
-                    extractedData.Price.Add(totalPrice);
+                    extractedData.Price.Add(totalPrice.Trim());
                     j++;
                 }
             }
@@ -54,27 +54,89 @@ namespace HWSPriceBot
         {
             if(title.Contains("[H]") || title.Contains("[h]"))
             {
-				return title.Split(']')[2].Split('[')[0];
+				return title.Split(']')[2].Split('[')[0].Trim();
             }
             return "0";
         }
 
 		public void AddToDatabase(ExtractedData data)
 		{
+            MergeUser(data.AuthorDto);
 
+            if(data.TextHtml == null)
+            {
+                data.TextHtml = "";
+            }
+
+            MergePost(data);
+
+        }
+
+        private void MergePost(ExtractedData data)
+        {
             SqlConnection myConnection = new SqlConnection(connectionString);
 
             SqlCommand myCommand = new SqlCommand("dbo.MergePost", myConnection);
             myCommand.CommandType = System.Data.CommandType.StoredProcedure;
-			myCommand.Parameters.AddWithValue("@Name", data.Author);
-			myCommand.Parameters.AddWithValue("@Items", data.Item);
-			myCommand.Parameters.AddWithValue("@Date", data.Date.ToString());
+            myCommand.Parameters.AddWithValue("@Name", data.Author);
+            myCommand.Parameters.AddWithValue("@Items", data.Item);
+            myCommand.Parameters.AddWithValue("@Date", data.Date.ToString());
             myCommand.Parameters.AddWithValue("@Price", String.Join(", ", data.Price.ToArray()));
             myCommand.Parameters.AddWithValue("@Url", data.Url.ToString());
-            
+            myCommand.Parameters.AddWithValue("@Text", data.Text);
+            myCommand.Parameters.AddWithValue("@TextHtml", data.TextHtml);
+            myCommand.Parameters.AddWithValue("@Flair", data.Flair);
+            myCommand.Parameters.AddWithValue("@Subreddit", data.Subreddit);
+            myCommand.Parameters.AddWithValue("@Title", data.Title);
+
             myConnection.Open();
 
             myCommand.ExecuteNonQuery();
+        }
+
+        private void MergeUser(Author data)
+        {
+            if (UserExists(data.Name))
+            {
+                return;
+            }
+            SqlConnection myConnection = new SqlConnection(connectionString);
+
+            SqlCommand myCommand = new SqlCommand("dbo.MergeAuthor", myConnection);
+            myCommand.CommandType = System.Data.CommandType.StoredProcedure;
+            myCommand.Parameters.AddWithValue("@Name", data.Name);
+            myCommand.Parameters.AddWithValue("@PostKarma", data.PostKarma);
+            myCommand.Parameters.AddWithValue("@CommentKarma", data.CommentKarma);
+            myCommand.Parameters.AddWithValue("@Created", data.Created);
+
+            myConnection.Open();
+
+            myCommand.ExecuteNonQuery();
+        }
+
+        private bool UserExists(string name)
+        {
+            bool valueExists = false;
+
+            SqlConnection myConnection = new SqlConnection(connectionString);
+
+            SqlCommand myCommand = new SqlCommand("dbo.ReadAuthor", myConnection);
+            myCommand.CommandType = System.Data.CommandType.StoredProcedure;
+            myCommand.Parameters.AddWithValue("@SearchTerm", name);
+            
+            myConnection.Open();
+
+            var reader = myCommand.ExecuteReader();
+            while (reader.Read())
+            {
+                if (reader.HasRows)
+                {
+
+                    valueExists = true;
+                }
+            }
+            reader.Close();
+            return valueExists;
         }
 
         public bool ValueExistsInDatabase(ExtractedData data)
@@ -87,8 +149,7 @@ namespace HWSPriceBot
             myCommand.Parameters.AddWithValue("@Name", data.Author);
             myCommand.Parameters.AddWithValue("@Items", data.Item);
             myCommand.Parameters.AddWithValue("@Date", data.Date.ToString());
-            myCommand.Parameters.AddWithValue("@Price", String.Join(", ", data.Price.ToArray()));
-            ;
+            
             myConnection.Open();
 
             var reader = myCommand.ExecuteReader();
