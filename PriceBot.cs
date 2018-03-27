@@ -52,42 +52,46 @@ namespace HWSPriceBot
             DataExctractor de = new DataExctractor();
             foreach (Post post in subreddit.New.Take(30))
             {
-                if (post.LinkFlairText.ToUpper() == "SELLING")
+                if (post.LinkFlairText != null)
                 {
-                    if (ContainsTable(post))
+                    if (post.LinkFlairText.ToUpper() == "SELLING")
                     {
-                        ExtractTable(post);
-                    }
-                    extractedData = new ExtractedData
-                    {
-                        Price = de.GetPrice(post),
-                        Item = de.ParseTitle(post.Title),
-                        Date = post.Created,
-                        Author = post.Author.Name,
-                        Url = post.Url,
-                        Text = post.SelfText,
-                        TextHtml = post.SelfTextHtml,
-                        Flair = post.LinkFlairText,
-                        Subreddit = post.SubredditName,
-                        Title = post.Title,
-                        AuthorDto = new Author
+                        if (ContainsTable(post))
                         {
-                            Name = post.Author.Name,
-                            PostKarma = post.Author.LinkKarma,
-                            CommentKarma = post.Author.CommentKarma,
-                            Created = post.Author.Created.ToString()
+                            ExtractTable(post);
                         }
+                        extractedData = new ExtractedData
+                        {
+                            Price = de.GetPrice(post),
+                            Item = de.ParseTitle(post.Title),
+                            Date = post.Created,
+                            Author = post.Author.Name,
+                            Url = post.Url,
+                            Text = post.SelfText,
+                            TextHtml = post.SelfTextHtml,
+                            Flair = post.LinkFlairText,
+                            Subreddit = post.SubredditName,
+                            Title = post.Title,
+                            AuthorDto = new Author
+                            {
+                                Name = post.Author.Name,
+                                PostKarma = post.Author.LinkKarma,
+                                CommentKarma = post.Author.CommentKarma,
+                                Created = post.Author.Created.ToString()
+                            }
 
-                    };
+                        };
 
-                    Console.Write("Post by " + post.Author.Name + " has been processed\n");
-                    bool itemInDatabase = de.ValueExistsInDatabase(extractedData);
-                    if (!itemInDatabase)
-                    {
-                        Console.Write("Post by " + extractedData.Author + " is being written to database\n");
-                        de.AddToDatabase(extractedData);
+                        Console.Write("Post by " + post.Author.Name + " has been processed\n");
+                        bool itemInDatabase = de.ValueExistsInDatabase(extractedData);
+                        if (!itemInDatabase)
+                        {
+                            Console.Write("Post by " + extractedData.Author + " is being written to database\n");
+                            de.AddToDatabase(extractedData);
+                        }
                     }
                 }
+
             }
         }
 
