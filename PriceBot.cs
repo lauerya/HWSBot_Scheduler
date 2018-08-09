@@ -9,6 +9,10 @@ namespace HWSPriceBot
 {
     class PriceBot
     {
+        public static string connectionStringDesktop = "Data Source=RYAN-DESKTOP;Initial Catalog=HardwareSwap;Integrated Security=True";
+        public static string connectionStringAWS = "Data Source=hardwareswapdb.cul748vqeknw.us-east-2.rds.amazonaws.com;Initial Catalog=HardwareSwap;Integrated Security=False; UID=lauerya; Password=Bronco1159!";
+        public static DataExctractor de = new DataExctractor();
+
         static void Main(string[] args)
         {
             GetHardwareSwap();
@@ -49,7 +53,6 @@ namespace HWSPriceBot
             List<ExtractedData> itemDetailList;
             ExtractedData extractedData;
             itemDetailList = new List<ExtractedData>();
-            DataExctractor de = new DataExctractor();
             foreach (Post post in subreddit.New.Take(30))
             {
                 if (post.LinkFlairText != null)
@@ -83,15 +86,22 @@ namespace HWSPriceBot
                         };
 
                         Console.Write("Post by " + post.Author.Name + " has been processed\n");
-                        bool itemInDatabase = de.ValueExistsInDatabase(extractedData);
-                        if (!itemInDatabase)
-                        {
-                            Console.Write("Post by " + extractedData.Author + " is being written to database\n");
-                            de.AddToDatabase(extractedData);
-                        }
+                        StoreInDatabase(extractedData, connectionStringDesktop);
+                        StoreInDatabase(extractedData, connectionStringAWS);
+
                     }
                 }
 
+            }
+        }
+
+        private static void StoreInDatabase(ExtractedData extractedData, string connectionString)
+        {
+            bool itemInDatabase = de.ValueExistsInDatabase(extractedData, connectionString);
+            if (!itemInDatabase)
+            {
+                Console.Write("Post by " + extractedData.Author + " is being written to database " + connectionString. + "\n");
+                de.AddToDatabase(extractedData, connectionString);
             }
         }
 

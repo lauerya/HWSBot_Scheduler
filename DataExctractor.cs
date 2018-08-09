@@ -8,8 +8,6 @@ namespace HWSPriceBot
     public class DataExctractor : IDataExtractor
     {
         ExtractedData extractedData;
-        string connectionString = "Data Source=DESKTOP-G3VPCBF;Initial Catalog=HardwareSwap;Integrated Security=True";
-
 
         public List<string> GetPrice(Post post)
         {
@@ -59,20 +57,19 @@ namespace HWSPriceBot
             return "0";
         }
 
-		public void AddToDatabase(ExtractedData data)
+		public void AddToDatabase(ExtractedData data, string connectionString)
 		{
-            MergeUser(data.AuthorDto);
+            MergeUser(data.AuthorDto, connectionString);
 
-            if(data.TextHtml == null)
+            if (data.TextHtml == null)
             {
                 data.TextHtml = "";
             }
 
-            MergePost(data);
-
+            MergePost(data, connectionString);
         }
 
-        private void MergePost(ExtractedData data)
+        private void MergePost(ExtractedData data, string connectionString)
         {
             SqlConnection myConnection = new SqlConnection(connectionString);
 
@@ -94,9 +91,9 @@ namespace HWSPriceBot
             myCommand.ExecuteNonQuery();
         }
 
-        private void MergeUser(Author data)
+        private void MergeUser(Author data, string connectionString)
         {
-            if (UserExists(data.Name))
+            if (UserExists(data.Name, connectionString))
             {
                 return;
             }
@@ -114,7 +111,7 @@ namespace HWSPriceBot
             myCommand.ExecuteNonQuery();
         }
 
-        private bool UserExists(string name)
+        private bool UserExists(string name, string connectionString)
         {
             bool valueExists = false;
 
@@ -139,7 +136,7 @@ namespace HWSPriceBot
             return valueExists;
         }
 
-        public bool ValueExistsInDatabase(ExtractedData data)
+        public bool ValueExistsInDatabase(ExtractedData data, string connectionString)
 		{
             SqlConnection myConnection = new SqlConnection(connectionString);
             bool valueExists = false;
